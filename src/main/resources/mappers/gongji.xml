@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding ="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.ictedu.someta.gongji.GongjiDao">
+<insert id="add" parameterType="gongji">
+insert into gongji values(gongji_SEQ.nextVal,#{title},#{writer},#{member_num},#{content},sysdate)
+</insert>
+<select id="glist" resultType="gongji" parameterType="map">
+SELECT num, title, writer,member_num,content,gdate,row_num FROM (
+SELECT num, title, writer,member_num,content,gdate,ROW_NUMBER() 
+OVER(ORDER BY num desc) AS row_num FROM gongji 
+<if test="searchType != null and searchValue !=null">
+	<where>
+		<choose>
+			<when test="searchType ==1">
+				writer like '%' || #{searchValue} ||'%'
+			</when>
+			<when test="searchType ==2">
+				title like '%' || #{searchValue} ||'%'
+			</when>
+			<when test="searchType ==3">
+				content like '%' || #{searchValue} ||'%'
+			</when>
+		</choose>
+	</where>
+</if>
+) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end}
+</select>
+
+<select id="totalCount" resultType="int" parameterType="map">
+select count(*) cnt from gongji
+<if test="searchType != null and searchValue !=null">
+	<where>
+		<choose>
+			<when test="searchType ==1">
+				writer like '%' || #{searchValue} ||'%'
+			</when>
+			<when test="searchType ==2">
+				title like '%' || #{searchValue} ||'%'
+			</when>
+			<when test="searchType ==3">
+				content like '%' || #{searchValue} ||'%'
+			</when>
+		</choose>
+	</where>
+</if>
+</select>
+
+
+<select id="detail" parameterType="int">
+select * from gongji where num=#{num}
+</select>
+<delete id="delete" parameterType="int">
+delete from gongji where num=#{num}
+</delete>
+</mapper>

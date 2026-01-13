@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="kr.co.ictedu.someta.member.MemberDao">
+	<insert id="insertMember" parameterType="mem">
+		INSERT INTO MEMBER (num, username, nickname, id, pwd, email, regdate)
+		VALUES (MEMBER_SEQ.NEXTVAL, #{username}, #{nickname}, #{id}, #{pwd}, #{email}, SYSDATE)
+	</insert>
+
+	<select id="countByEmail" resultType="int" parameterType="map">
+		SELECT COUNT(*) cnt FROM member
+		<where>
+			EMAIL = #{email}
+			<if test="id != null">
+				AND ID = #{id}
+			</if>
+		</where>
+	</select>
+	
+	<update id="updateMember" parameterType="mem">
+  		UPDATE MEMBER
+	  	<set>
+	    	<if test="username != null and username != ''">
+	      		username = #{username},
+	    	</if>
+	    	<if test="nickname != null and nickname != ''">
+	      		nickname = #{nickname},
+	    	</if>
+	    	<if test="id != null and id != ''">
+	    		id = #{id},
+	    	</if>
+	    	<if test="pwd != null and pwd != ''">
+	    		pwd = #{pwd},
+	    	</if>
+	    	<if test="email != null and email != ''">
+	      		email = #{email},
+	    	</if>
+	  	</set>
+  		WHERE num = #{num}
+	</update>
+	
+	<select id="findId" resultType="string" parameterType="mem">
+		SELECT ID FROM MEMBER WHERE EMAIL = #{email} AND USERNAME = #{username}
+	</select>
+
+	<update id="findPassword" parameterType="mem">
+		UPDATE MEMBER SET PWD = #{pwd} WHERE id = #{id} AND EMAIL = #{email}
+	</update>
+</mapper>

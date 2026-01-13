@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.ictedu.someta.chart.ChartDao">
+
+	<select id="userTotalCount" resultType="int">
+		SELECT COUNT(*) AS usercnt FROM MEMBER
+	</select>
+	<select id="activeUserCount" resultType="int">
+		SELECT COUNT(DISTINCT idn) AS activeuser FROM loginlog WHERE SSTIME > (SYSDATE-7)
+	</select>
+	<select id="dailyMatchCount" resultType="int">
+		SELECT COUNT(action_time) AS dailymatch FROM like_request_log
+		WHERE ACTION_TIME BETWEEN TRUNC(SYSDATE)-1 AND TRUNC(SYSDATE)  AND status = 'accepted'
+	</select>
+	<select id="genderCount" resultType="map">
+		SELECT gender, COUNT(*) AS gendercnt FROM member_profile group by gender
+	</select>
+	<select id="addrCount" resultType="map">
+		SELECT address, COUNT(*) AS addrcnt FROM member_profile GROUP BY address
+	</select>
+	
+	<select id="likeCount" resultType="int" parameterType="mem">
+		SELECT COUNT(*) AS likecnt FROM like_request WHERE RECEIVER_ID = #{userid}
+	</select>
+	<select id="matchCount" resultType="int" parameterType="mem">
+		SELECT COUNT(*) AS matchcnt FROM like_request WHERE RECEIVER_ID = #{userid} AND status = 'accepted'
+	</select>
+	<select id="dateCount" resultType="int" parameterType="mem">
+		SELECT COUNT(*) AS datecnt FROM date_request WHERE RECEIVER_ID = #{userid} AND status = 'accepted'
+	</select>
+	<select id="responseCount" resultType="int" parameterType="mem">
+		SELECT COUNT(*) AS norescnt FROM like_request WHERE RECEIVER_ID = #{userid} and STATUS != 'pending'
+	</select>
+	<select id="sstimeAverage" resultType="int" parameterType="mem">
+		SELECT ROUND(tsum/total) AS avgsstime FROM(
+		SELECT SUM(TO_CHAR(SSTIME, 'HH24')) AS tsum, COUNT(*) AS total
+		FROM LOGINLOG WHERE IDN = #{userid} AND STATUS = 'login')
+	</select>
+	
+	<select id="dauCount" resultType="int">
+		SELECT COUNT(UNIQUE idn) AS dau FROM LOGINLOG
+		WHERE SSTIME BETWEEN TRUNC(SYSDATE)-1 AND TRUNC(SYSDATE) AND STATUS = 'login'
+	</select>
+	<select id="wauCount" resultType="int">
+		SELECT COUNT(UNIQUE idn) AS wau FROM LOGINLOG
+		WHERE SSTIME BETWEEN TRUNC(SYSDATE)-7 AND TRUNC(SYSDATE) AND STATUS = 'login'
+	</select>
+	<select id="mauCount" resultType="int">
+		SELECT COUNT(UNIQUE idn) AS mau FROM LOGINLOG
+		WHERE SSTIME BETWEEN ADD_MONTHS(TRUNC(SYSDATE),-1) AND TRUNC(SYSDATE) AND STATUS = 'login'
+	</select>
+	<select id="yauCount" resultType="int">
+		SELECT COUNT(UNIQUE idn) AS yau FROM LOGINLOG
+		WHERE SSTIME BETWEEN ADD_MONTHS(TRUNC(SYSDATE),-12) AND TRUNC(SYSDATE) AND STATUS = 'login'
+	</select>
+	<select id="visitorCount" resultType="int">
+		SELECT COUNT(UNIQUE reip) FROM VISITORSLOG
+	</select>
+	<select id="churnCount" resultType="int">
+		SELECT COUNT(DISTINCT idn) AS churn FROM (
+		SELECT idn, sstime, status, ADD_MONTHS(SYSDATE,-1) AS onemonth, ROW_NUMBER() OVER(PARTITION BY idn ORDER BY sstime desc) AS row_num FROM LOGINLOG WHERE STATUS = 'login'
+		) WHERE row_num = 1 AND onemonth > sstime
+	</select>
+	
+</mapper>

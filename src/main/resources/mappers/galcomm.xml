@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding ="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.ictedu.someta.gallery.GalCommDAO">
+<insert id="addcomm" parameterType="galcommvo" >
+insert into gallery_comm values(gallery_comm_seq.nextVal, #{gallery_num},#{gwriter},#{member_num},#{gcontent},0,#{reip},sysdate)
+</insert>
+
+<select id="listcomm" resultType="galcommvo" parameterType="map" >
+SELECT num, gallery_num,gwriter,member_num,gcontent,elike,reip,gcdate, row_num FROM (
+SELECT num, gallery_num,gwriter,member_num,gcontent,elike,reip,gcdate, ROW_NUMBER() 
+OVER(ORDER BY num desc) AS row_num FROM gallery_comm where gallery_num=#{num}
+) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end} 
+</select>
+<select id="totalCount" resultType="int" parameterType="map">
+select count(*) cnt from gallery_comm where gallery_num=#{num}
+</select>
+
+</mapper>
