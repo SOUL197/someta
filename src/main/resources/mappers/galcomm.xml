@@ -9,9 +9,9 @@ insert into gallery_comm values(gallery_comm_seq.nextVal, #{gallery_num},#{gwrit
 </insert>
 
 <select id="listcomm" resultType="galcommvo" parameterType="map" >
-SELECT num, gallery_num,gwriter,member_num,gcontent,elike,reip,gcdate, row_num FROM (
-SELECT num, gallery_num,gwriter,member_num,gcontent,elike,reip,gcdate, ROW_NUMBER() 
-OVER(ORDER BY num desc) AS row_num FROM gallery_comm where gallery_num=#{num}
+SELECT comm_num, gallery_num,gwriter,member_num,gcontent,elike,reip,gcdate, row_num FROM (
+SELECT comm_num, gallery_num,gwriter,member_num,gcontent,elike,reip,gcdate, ROW_NUMBER() 
+OVER(ORDER BY comm_num desc) AS row_num FROM gallery_comm where gallery_num=#{num}
 ) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end} 
 </select>
 <select id="totalCount" resultType="int" parameterType="map">

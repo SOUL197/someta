@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="kr.co.ictedu.someta.date.DateDao">
+
+	<insert id="sendRequest">
+		INSERT INTO date_REQUEST (id,requester_id,receiver_id,date_location)
+		VALUES (date_request_seq.NEXTVAL,#{requester_id},#{receiver_id},#{date_location})
+  	</insert>
+  	
+  	<select id="getPending" resultType="map">
+		SELECT m.NUM,m.NICKNAME,p.BIRTH,i.PROFILEIMAGE,d.ID,d.date_location
+		FROM MEMBER M, MEMBER_PROFILE p, MEMBER_PROFILE_IMAGES i,date_REQUEST d
+		WHERE m.NUM=p.MEMBERID AND m.NUM=i.USERID AND d.STATUS='pending'
+		AND m.nickname = d.requester_id and d.RECEIVER_ID = #{nickname}
+  	</select>
+  	
+  	<update id="updateStatus">
+		UPDATE date_REQUEST SET status = #{status} WHERE
+		(requester_id = #{nickName} AND receiver_id = #{likeNickName})
+		OR (requester_id = #{likeNickName} AND receiver_id = #{nickName})
+	</update>
+  	
+  	<select id="getDate" resultType="map">
+		SELECT m.num, m.NICKNAME, p.BIRTH, i.PROFILEIMAGE,
+		d.date_location
+		FROM date_REQUEST d
+		JOIN MEMBER m ON d.REQUESTER_ID = m.nickname
+		JOIN MEMBER_PROFILE p ON p.MEMBERID = m.num
+		JOIN MEMBER_PROFILE_IMAGES i ON i.USERID = m.num
+		WHERE d.RECEIVER_ID=#{nickname} AND
+		d.STATUS='accepted'
+		UNION
+		SELECT m.num, m.NICKNAME, p.BIRTH, i.PROFILEIMAGE,
+		d.date_location
+		FROM date_REQUEST d
+		JOIN MEMBER m ON d.RECEIVER_ID = m.nickname
+		JOIN MEMBER_PROFILE p ON p.MEMBERID = m.num
+		JOIN MEMBER_PROFILE_IMAGES i ON i.USERID = m.num
+		WHERE d.REQUESTER_ID=#{nickname} AND
+		d.STATUS='accepted'
+  	</select>
+  	
+  	<select id="getSentRequest" resultType="datevo">
+  		SELECT * FROM date_REQUEST WHERE requester_id=#{nickname}
+  	</select>
+  	
+  	<select id="checkRequestExists" resultType="int">
+		SELECT COUNT(*) FROM date_REQUEST
+		WHERE (REQUESTER_ID = #{requester_id} AND RECEIVER_ID = #{receiver_id})
+		OR (REQUESTER_ID = #{receiver_id} AND RECEIVER_ID = #{requester_id})
+  	</select>
+  	
+  	<update id="resendRequest">
+		UPDATE date_REQUEST SET status = 'pending', request_date = SYSDATE, date_location=#{date_location},
+    	requester_id = #{requester_id}, receiver_id = #{receiver_id}
+    	WHERE (REQUESTER_ID = #{requester_id} AND RECEIVER_ID = #{receiver_id})
+    	OR (REQUESTER_ID = #{receiver_id} AND RECEIVER_ID = #{requester_id})
+  	</update>
+  	
+  	<select id="countDate" resultType="int">
+		SELECT COUNT(*) FROM date_REQUEST WHERE STATUS = 'accepted'
+		AND (REQUESTER_ID = #{nickname} OR RECEIVER_ID = #{nickname})
+	</select>
+
+</mapper>

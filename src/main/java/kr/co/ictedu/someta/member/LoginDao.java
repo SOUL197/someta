@@ -10,7 +10,7 @@ import kr.co.ictedu.someta.vo.MemberVO;
 @Mapper
 public interface LoginDao {
 	
-	@Select("SELECT NICKNAME, COUNT(*) cnt FROM MEMBER WHERE \r\n"
-			+ "id=#{id} AND pwd=#{pwd} GROUP BY NICKNAME")
+	@Select("SELECT num, NICKNAME, COUNT(*) cnt FROM MEMBER WHERE \r\n"
+			+ "id=#{id} AND pwd=#{pwd} GROUP BY num, NICKNAME")
 	Map<String, Object> loginCheck(MemberVO vo);
 }

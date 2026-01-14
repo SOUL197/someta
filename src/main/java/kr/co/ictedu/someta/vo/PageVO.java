@@ -23,7 +23,7 @@ public class PageVO {
 		this.nowPage=1;
 		this.nowBlock=1;
 		this.numPerPage=10;
-		this.pagePerBlock=4;
+		this.pagePerBlock=5;
 		System.out.println("페이지 처리 객체가 생성되었습니다!");
 	}
 }

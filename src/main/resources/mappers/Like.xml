@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="kr.co.ictedu.someta.like.LikeRequestDao">
+
+  	<insert id="sendRequest">
+		INSERT INTO Like_REQUEST (id,requester_id,receiver_id)
+		VALUES (like_request_seq.NEXTVAL,#{requester_id},#{receiver_id})
+  	</insert>
+  
+  	<select id="getPending" resultType="map">
+		SELECT m.NUM,m.NICKNAME,p.BIRTH,i.PROFILEIMAGE,l.ID
+		FROM MEMBER M, MEMBER_PROFILE p, MEMBER_PROFILE_IMAGES i,LIKE_REQUEST l
+		WHERE m.NUM=p.MEMBERID AND m.NUM=i.USERID AND l.STATUS='pending'
+		AND m.nickname = l.requester_id and l.RECEIVER_ID = #{nickname}
+  	</select>
+  
+  	<update id="updateStatus">
+		UPDATE Like_REQUEST SET status = #{status} WHERE
+		(requester_id = #{nickName} AND receiver_id = #{likeNickName})
+		OR (requester_id = #{likeNickName} AND receiver_id = #{nickName})
+  	</update>
+  
+  	<select id="getLike" resultType="map" parameterType="map">
+		SELECT m.num, m.USERNAME, m.NICKNAME, m.BIRTH, m.row_num, i.PROFILEIMAGE
+		FROM (SELECT likes.*, ROW_NUMBER() OVER(ORDER BY likes.num ASC) row_num
+		FROM (SELECT m.num, m.USERNAME, m.NICKNAME, i.PROFILEIMAGE, p.*
+		FROM Like_REQUEST l
+		JOIN MEMBER m ON l.REQUESTER_ID = m.nickname
+		JOIN MEMBER_PROFILE p ON p.MEMBERID = m.num
+		JOIN MEMBER_PROFILE_IMAGES i ON i.USERID = m.num
+		WHERE l.RECEIVER_ID = #{nickname} AND l.STATUS = 'accepted'
+		UNION
+		SELECT m.num, m.USERNAME, m.NICKNAME, i.PROFILEIMAGE, p.*
+		FROM Like_REQUEST l
+		JOIN MEMBER m ON l.RECEIVER_ID = m.nickname
+		JOIN MEMBER_PROFILE p ON p.MEMBERID = m.num
+		JOIN MEMBER_PROFILE_IMAGES i ON i.USERID = m.num
+		WHERE l.REQUESTER_ID = #{nickname} AND l.STATUS = 'accepted'
+		) likes
+        <where>
+            <if test="matchingTypeList != null and matchingValue != null">
+                <foreach collection="matchingTypeList" item="type">
+                    <if test="type == 1 and matchingValue.country != null">
+      					and likes.COUNTRY=#{matchingValue.country}
+    				</if>
+    				<if test="type == 2 and matchingValue.address != null">
+						and likes.ADDRESS like '%'|| #{matchingValue.address} ||'%'
+            		</if>
+            		<if test="type == 3 and matchingValue.height != null">
+						and likes.HEIGHT between #{matchingValue.height.low} and
+						#{matchingValue.height.high}
+            		</if>
+            		<if test="type == 4 and matchingValue.weight != null">
+						and likes.WEIGHT between #{matchingValue.weight.low} and #{matchingValue.weight.high}
+            		</if>
+            		<if test="type == 5 and matchingValue.hobby != null">
+						and likes.HOBBY like '%'|| #{matchingValue.hobby} ||'%'
+            		</if>
+            		<if test="type == 6 and matchingValue.mbti != null">
+						and likes.MBTI like '%'|| #{matchingValue.mbti} ||'%'
+            		</if>
+            		<if test="type == 7 and matchingValue.religion != null">
+						and likes.RELIGION like '%'|| #{matchingValue.religion} ||'%'
+            		</if>
+            		<if test="type == 8 and matchingValue.drinking != null">
+						and likes.DRINKING like '%'|| #{matchingValue.drinking} ||'%'
+            		</if>
+            		<if test="type == 9 and matchingValue.smoking != null">
+						and likes.SMOKING like '%'|| #{matchingValue.smoking}
+						||'%'
+            		</if>
+                </foreach>
+            </if>
+            <if test="searchType != null">
+                <choose>
+                    <when test="searchType == 1 and searchValue != null">
+                        AND NICKNAME LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 2 and period != null and period.start != null and period.finish != null">
+						AND BIRTH BETWEEN
+						TO_DATE(#{period.start},'YYYY')
+						AND TO_DATE(#{period.finish} || '12-31', 'YYYY-MM-DD')
+                    </when>
+                </choose>
+            </if>
+        </where>
+		) m,
+		(
+		SELECT USERID, PROFILEIMAGE FROM (
+		SELECT USERID, PROFILEIMAGE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER
+		BY USERID ASC) rn
+		FROM MEMBER_PROFILE_IMAGES
+		) WHERE rn = 1
+		) i
+		WHERE m.num = i.USERID(+)
+		AND m.row_num BETWEEN #{begin} AND #{end}
+  	</select>
+  	
+  	<select id="totalCount" resultType="int" parameterType="map">
+		SELECT COUNT(*)
+		FROM (SELECT likes.*
+		FROM (SELECT m.num, m.USERNAME, m.NICKNAME, p.*
+		FROM Like_REQUEST l
+		JOIN MEMBER m ON l.REQUESTER_ID = m.nickname
+		JOIN MEMBER_PROFILE p ON p.MEMBERID = m.num
+		WHERE l.RECEIVER_ID = #{nickname} AND l.STATUS = 'accepted'
+		UNION
+		SELECT m.num, m.USERNAME, m.NICKNAME, p.*
+		FROM Like_REQUEST l
+		JOIN MEMBER m ON l.RECEIVER_ID = m.nickname
+		JOIN MEMBER_PROFILE p ON p.MEMBERID = m.num
+		WHERE l.REQUESTER_ID = #{nickname} AND l.STATUS = 'accepted'
+		) likes
+        <where>
+            <if test="matchingTypeList != null and matchingValue != null">
+                <foreach collection="matchingTypeList" item="type">
+                    <if test="type == 1 and matchingValue.country != null">
+      					and likes.COUNTRY=#{matchingValue.country}
+    				</if>
+    				<if test="type == 2 and matchingValue.address != null">
+						and likes.ADDRESS like '%'|| #{matchingValue.address} ||'%'
+            		</if>
+            		<if test="type == 3 and matchingValue.height != null">
+						and likes.HEIGHT between #{matchingValue.height.low} and
+						#{matchingValue.height.high}
+            		</if>
+            		<if test="type == 4 and matchingValue.weight != null">
+						and likes.WEIGHT between #{matchingValue.weight.low} and #{matchingValue.weight.high}
+            		</if>
+            		<if test="type == 5 and matchingValue.hobby != null">
+						and likes.HOBBY like '%'|| #{matchingValue.hobby} ||'%'
+            		</if>
+            		<if test="type == 6 and matchingValue.mbti != null">
+						and likes.MBTI like '%'|| #{matchingValue.mbti} ||'%'
+            		</if>
+            		<if test="type == 7 and matchingValue.religion != null">
+						and likes.RELIGION like '%'|| #{matchingValue.religion} ||'%'
+            		</if>
+            		<if test="type == 8 and matchingValue.drinking != null">
+						and likes.DRINKING like '%'|| #{matchingValue.drinking} ||'%'
+            		</if>
+            		<if test="type == 9 and matchingValue.smoking != null">
+						and likes.SMOKING like '%'|| #{matchingValue.smoking}
+						||'%'
+            		</if>
+                </foreach>
+            </if>
+            <if test="searchType != null">
+                <choose>
+                    <when test="searchType == 1 and searchValue != null">
+                        AND NICKNAME LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 2 and period != null and period.start != null and period.finish != null">
+						AND BIRTH BETWEEN
+						TO_DATE(#{period.start},'YYYY')
+						AND TO_DATE(#{period.finish} || '12-31', 'YYYY-MM-DD')
+                    </when>
+                </choose>
+            </if>
+        </where>
+		)
+	</select>
+	
+	<select id="detail" resultType="map" parameterType="int">
+		SELECT m.num, m.nickname, p.*, i.profileimage FROM member m,
+		member_profile p, member_profile_images i
+		WHERE m.num = p.memberid (+) AND m.num = i.userid (+) AND m.num = #{num}
+		ORDER BY i.profileimage ASC
+  	</select>
+  	
+  	<select id="getSentRequest" resultType="likevo">
+  		SELECT * FROM like_REQUEST WHERE requester_id=#{nickname}
+  	</select>
+  	
+  	<select id="checkRequestExists" resultType="int">
+		SELECT COUNT(*) FROM like_REQUEST
+		WHERE (REQUESTER_ID = #{requester_id} AND RECEIVER_ID = #{receiver_id})
+		OR (REQUESTER_ID = #{receiver_id} AND RECEIVER_ID = #{requester_id})
+  	</select>
+  	
+  	<update id="resendRequest">
+		UPDATE like_REQUEST SET status = 'pending', request_date = SYSDATE
+    	WHERE (REQUESTER_ID = #{requester_id} AND RECEIVER_ID = #{receiver_id})
+    	OR (REQUESTER_ID = #{receiver_id} AND RECEIVER_ID = #{requester_id})
+  	</update>
+
+</mapper>

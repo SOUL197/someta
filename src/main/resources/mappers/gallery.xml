@@ -6,7 +6,7 @@
 <mapper namespace="kr.co.ictedu.someta.gallery.GalleryDAO">
 	<insert id="add" parameterType="galvo">
 	insert into gallery values (gallery_seq.NEXTVAL, #{title},
-	#{contents}, #{writer}, #{reip},0,0,sysdate)
+	#{contents}, #{writer},#{member_num}, #{reip},0,0,sysdate)
 	</insert>
 	
 	<insert id="addimg" parameterType="java.util.List">

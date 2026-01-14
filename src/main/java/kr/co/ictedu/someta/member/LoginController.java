@@ -35,7 +35,7 @@ public class LoginController {
 			if (cnt == 1) {
 				System.out.println("세션 처리 완료!");
 				vo.setNickname(result.get("NICKNAME").toString());
-				
+				vo.setNum(Integer.parseInt(result.get("NUM").toString()));
 				// 로그인 처리를 완료하기 위해서 세션 Scope에 키(key)와 값(value)으로 저장
 				// vo에는 nickname,
 				session.setAttribute("loginMember", vo);

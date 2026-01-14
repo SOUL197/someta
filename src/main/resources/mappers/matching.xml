@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  <mapper namespace="kr.co.ictedu.someta.matching.MatchingDao">
+  
+  <update id="update" parameterType="mpivo">
+		UPDATE MEMBER_PROFILE_IMAGES SET profileimage=#{profileimage} WHERE
+		userid=#{userid}
+  </update>
+  
+  <select id="list" resultType="map" parameterType="map">
+		SELECT m.num,m.nickname,m.birth,m.row_num,i.profileIMAGE FROM
+		(SELECT m.num,m.NICKNAME, p.BIRTH,ROW_NUMBER() OVER(ORDER BY m.num asc)
+		row_num
+		FROM member M, member_PROFILE p
+		<where>
+			m.NUM=p.MEMBERID and m.nickname!=#{nickname}
+			<if test="matchingTypeList !=null and matchingValue !=null">
+				<foreach collection="matchingTypeList" item="type">
+					<if test="type == 1 and matchingValue.country != null">
+      					and p.COUNTRY=#{matchingValue.country}
+    				</if>
+    				<if test="type == 2 and matchingValue.address != null">
+						and p.ADDRESS like '%'|| #{matchingValue.address} ||'%'
+            		</if>
+            		<if test="type == 3 and matchingValue.height != null">
+						and p.HEIGHT between #{matchingValue.height.low} and
+						#{matchingValue.height.high}
+            		</if>
+            		<if test="type == 4 and matchingValue.weight != null">
+						and p.WEIGHT between #{matchingValue.weight.low} and #{matchingValue.weight.high}
+            		</if>
+            		<if test="type == 5 and matchingValue.hobby != null">
+						and p.HOBBY like '%'|| #{matchingValue.hobby} ||'%'
+            		</if>
+            		<if test="type == 6 and matchingValue.mbti != null">
+						and p.MBTI like '%'|| #{matchingValue.mbti} ||'%'
+            		</if>
+            		<if test="type == 7 and matchingValue.religion != null">
+						and p.RELIGION like '%'|| #{matchingValue.religion} ||'%'
+            		</if>
+            		<if test="type == 8 and matchingValue.drinking != null">
+						and p.DRINKING like '%'|| #{matchingValue.drinking} ||'%'
+            		</if>
+            		<if test="type == 9 and matchingValue.smoking != null">
+						and p.SMOKING like '%'|| #{matchingValue.smoking} ||'%'
+            		</if>
+				</foreach>
+			</if>
+			<if test="searchType !=null">
+				<choose>
+					<when test="searchType == 1 and searchValue !=null">
+						and m.nickname like '%'|| #{searchValue} ||'%'
+					</when>
+					<when test="searchType == 2 and period !=null and period.start != null and period.finish != null">
+						and p.birth
+						BETWEEN TO_DATE(#{period.start}||'01-01','YYYY') AND
+						TO_DATE(#{period.finish}||'12-31' ,'YYYY-MM-DD')
+					</when>
+				</choose>
+			</if>
+		</where>
+		) M, (
+		SELECT userid,profileIMAGE FROM(
+		SELECT userid,profileIMAGE,ROW_NUMBER() OVER(PARTITION BY userid ORDER
+		BY userid asc) rn
+		FROM MEMBER_PROFILE_IMAGES
+		)
+		WHERE rn = 1
+		) i
+		WHERE m.num = i.userid (+) AND m.row_num BETWEEN #{begin} AND #{end}
+  </select>
+  
+  <select id="detail" resultType="map" parameterType="int">
+  	SELECT m.num, m.nickname, m.birth, i.profileimage
+	FROM (SELECT m.num,m.NICKNAME, p.BIRTH
+	FROM member M, member_PROFILE p WHERE m.NUM=p.MEMBERID) M,
+	(SELECT userid,profileIMAGE FROM MEMBER_PROFILE_IMAGES) i
+	WHERE m.num =+ i.userid AND m.num = #{num} ORDER BY i.profileIMAGE asc
+  </select>
+  
+  <select id="totalCount" resultType="int" parameterType="map">
+		select count(*) from MEMBER M,MEMBER_PROFILE p
+		<where>
+			m.NUM=p.MEMBERID and m.nickname!=#{nickname}
+			<if test="matchingTypeList !=null and matchingValue !=null">
+				<foreach collection="matchingTypeList" item="type">
+					<if test="type == 1 and matchingValue.country != null">
+      					and p.COUNTRY=#{matchingValue.country}
+    				</if>
+    				<if test="type == 2 and matchingValue.address != null">
+						and p.ADDRESS like '%'|| #{matchingValue.address} ||'%'
+            		</if>
+            		<if test="type == 3 and matchingValue.height != null">
+						and p.HEIGHT between #{matchingValue.height.low} and
+						#{matchingValue.height.high}
+            		</if>
+            		<if test="type == 4 and matchingValue.weight != null">
+						and p.WEIGHT between #{matchingValue.weight.low} and #{matchingValue.weight.high}
+            		</if>
+            		<if test="type == 5 and matchingValue.hobby != null">
+						and p.HOBBY like '%'|| #{matchingValue.hobby} ||'%'
+            		</if>
+            		<if test="type == 6 and matchingValue.mbti != null">
+						and p.MBTI like '%'|| #{matchingValue.mbti} ||'%'
+            		</if>
+            		<if test="type == 7 and matchingValue.religion != null">
+						and p.RELIGION like '%'|| #{matchingValue.religion} ||'%'
+            		</if>
+            		<if test="type == 8 and matchingValue.drinking != null">
+						and p.DRINKING like '%'|| #{matchingValue.drinking} ||'%'
+            		</if>
+            		<if test="type == 9 and matchingValue.smoking != null">
+						and p.SMOKING like '%'|| #{matchingValue.smoking} ||'%'
+            		</if>
+				</foreach>
+			</if>
+			<if test="searchType !=null">
+				<choose>
+					<when test="searchType == 1 and searchValue !=null">
+						and m.nickname like '%'|| #{searchValue} ||'%'
+					</when>
+					<when test="searchType == 2 and period !=null and period.start != null and period.finish != null">
+						and p.birth
+						BETWEEN TO_DATE(#{period.start}||'01-01','YYYY') AND
+						TO_DATE(#{period.finish}||'12-31' ,'YYYY-MM-DD')
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+	
+	<select id="getProfileImage">
+		SELECT i.PROFILEIMAGE
+		FROM MEMBER M, MEMBER_PROFILE_IMAGES i
+		WHERE m.NUM=i.userid AND m.NICKNAME=#{nickname}
+	</select>
+  
+  </mapper>
