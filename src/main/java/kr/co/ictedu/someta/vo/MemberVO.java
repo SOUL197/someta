@@ -2,12 +2,16 @@ package kr.co.ictedu.someta.vo;
 
 import org.apache.ibatis.type.Alias;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Alias("mem") 
 @Setter
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class MemberVO {
 	private int num;
 	private String username;

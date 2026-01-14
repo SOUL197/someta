@@ -1,4 +1,4 @@
-package kr.co.ictedu.someta.member;
+package kr.co.ictedu.someta.pwl;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -27,74 +27,22 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import kr.co.ictedu.someta.pwl.MessageUtils;
-import kr.co.ictedu.someta.vo.MemberVO;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/login")
-public class LoginController {
-
+@RequestMapping("/api/Login/")
+public class ApiLogin {
 	@Autowired
-	private LoginService loginService;
-	
-	// {"id":"tess01","pwd":"11"} -> 이런 형태로 넘어오면, vo에 저장할 것
-	@PostMapping("/dologin")
-	public String doLogin(HttpSession session, HttpServletRequest request,
-			@RequestHeader("User-Agent") String userAgent,
-			@RequestBody MemberVO vo) {
-		
-		Map<String, Object> result = loginService.loginCheck(vo);
-		System.out.println("result" + result);
-		
-		if (result != null && result.get("CNT") != null) {
-			int cnt = ((Number) result.get("CNT")).intValue();
-			
-			if (cnt == 1) {
-				System.out.println("세션 처리 완료!");
-				vo.setNickname(result.get("NICKNAME").toString());
-				vo.setNum(Integer.parseInt(result.get("NUM").toString()));
-				// 로그인 처리를 완료하기 위해서 세션 Scope에 키(key)와 값(value)으로 저장
-				// vo에는 nickname,
-				session.setAttribute("loginMember", vo);
-				return "success";
-			}
-		}
-		return "fail";
-	}
-	
-	@GetMapping("/dologout")
-	public String doLogout(HttpSession session, HttpServletRequest request,
-			@RequestHeader("User-Agent") String userAgent) {
-		System.out.println("로그아웃 처리 완료!");
-		session.invalidate();
-		return "logout";
-	}
-	
-	@GetMapping("/session")
-	public MemberVO session(HttpSession session) {
-		MemberVO loginMember = (MemberVO) session.getAttribute("loginMember");
-		
-		// 로그인의 상태를 확인할 때 setPassword는 json으로 노출 안 되게 null
-		if (loginMember != null) {
-			loginMember.setPwd(null);
-		}
-		
-		return loginMember; // username, id
-	}
-	
-	// ------------------------------------------------ Passwordless ------------------------------------------------
+	private LoginMapper loginMapper;
 	@Autowired
 	MessageUtils messageUtils;
 
@@ -128,30 +76,213 @@ public class LoginController {
 	private String getSpUrl = "/ap/rest/auth/getSp"; // Passwordless Authentication Request REST API
 	private String resultUrl = "/ap/rest/auth/result"; // Passwordless Authentication Result Request REST API
 	private String cancelUrl = "/ap/rest/auth/cancel"; // Passwordless Authentication Request Cancellation REST API
+	
+	// Login
+		@PostMapping(value="loginCheck", produces="application/json;charset=utf8")
+		public Map<String, Object> loginCheck(
+				@RequestParam(value = "id", required = false) String id,
+				@RequestParam(value = "pw", required = false) String pw,
+				HttpServletRequest request) {
+		
+			if(id == null)	id = "";
+			if(pw == null)	pw = "";
 
+			log.info("loginCheck : [" + id + "] / ["  + pw + "]");
+
+			Map<String, Object> mapResult = new HashMap<String, Object>();
+
+			if(!id.equals("") && !pw.equals("")) {
+				
+				UserInfo userinfo = new UserInfo();
+				userinfo.setId(id);
+				userinfo.setPw(pw);
+				UserInfo newUserinfo = loginMapper.checkPassword(userinfo);
+				
+				boolean exist = false;
+				
+				if(newUserinfo != null) {
+					ModelMap modelMap = passwordlessCallApi("isApUrl", "userId=" + id, request, null);
+					System.out.println(modelMap);
+					if(modelMap != null) {
+						String result = (String) modelMap.getAttribute("result");
+						if(result.equals("OK")) {
+							String data = (String) modelMap.getAttribute("data");
+							if(data != null && !data.equals("")) {
+								JSONParser parser = new JSONParser();
+								try {
+									JSONObject jsonResponse = (JSONObject)parser.parse(data);
+								    JSONObject jsonData = (JSONObject) jsonResponse.get("data");
+								    System.out.println("data=" + jsonData.toString());
+								    exist = (boolean) (jsonData).get("exist");
+								} catch(ParseException pe) {
+									pe.printStackTrace();
+								}
+							}
+						}
+					}
+
+					log.info("recommend=" + recommend + ", exist=" + exist);
+					
+					if(recommend.equals("1") && exist) {
+						mapResult.put("result", messageUtils.getMessage("text.passwordless.password"));	// If you want to log in with your user password,\nunregister the Passwordless service first.
+					}
+					else {
+						HttpSession session = request.getSession(true);
+						session.setAttribute("id", id);
+						
+						mapResult.put("result", "OK");
+					}
+				}
+				else {
+					mapResult.put("result", messageUtils.getMessage("text.passwordless.invalid"));	// Invalid id or password.
+				}
+			}
+			
+			return mapResult;
+		}
+		
+		// Sign
+		@PostMapping(value="join", produces="application/json;charset=utf8")
+		public Map<String, Object> join(
+				@RequestParam(value = "id", required = false) String id,
+				@RequestParam(value = "pw", required = false) String pw,
+				HttpServletRequest request) {
+		
+			if(id == null)		id = "";
+			if(pw == null)		pw = "";
+
+			Map<String, Object> mapResult = new HashMap<String, Object>();
+
+			if(!id.equals("") && !pw.equals("")) {
+				
+				UserInfo userinfo = new UserInfo();
+				userinfo.setId(id);
+				UserInfo newUserinfo = loginMapper.getUserInfo(userinfo);
+				
+				if(newUserinfo != null) {
+					log.info("join failed");
+					String tmp_result = messageUtils.getMessage("text.passwordless.idexist");	// ID [" + id + "] already exists.
+					mapResult.put("result", tmp_result.replace("@@@", id));
+				}
+				else {
+					userinfo.setPw(pw);
+					loginMapper.createUserInfo(userinfo);
+					log.info("join completed.");
+
+					mapResult.put("result", "OK");
+				}
+			}
+			
+			return mapResult;
+		}
+		
+		// Account Deletion
+		@PostMapping(value="withdraw", produces="application/json;charset=utf8")
+		public Map<String, Object> withdraw(HttpServletRequest request) {
+		
+			HttpSession session = request.getSession(true);
+			String id = (String) session.getAttribute("id");
+
+			if(id == null)		id = "";
+
+			log.info("withdraw : [" + id + "]");
+
+			Map<String, Object> mapResult = new HashMap<String, Object>();
+
+			if(!id.equals("")) {
+				
+				UserInfo userinfo = new UserInfo();
+				userinfo.setId(id);
+				loginMapper.withdrawUserInfo(userinfo);
+				
+				session.setAttribute("id", null);
+				log.info("withdraw : [" + id + "] completed.");
+			}
+			
+			mapResult.put("result", "OK");
+
+			return mapResult;
+		}
+		
+		// Change Password
+		@PostMapping(value="changepw", produces="application/json;charset=utf8")
+		public Map<String, Object> changepw(
+				@RequestParam(value = "id", required = false) String id,
+				@RequestParam(value = "pw", required = false) String pw,
+				HttpServletRequest request) {
+		
+			if(id == null)		id = "";
+			if(pw == null)		pw = "";
+
+			Map<String, Object> mapResult = new HashMap<String, Object>();
+
+			if(!id.equals("") && !pw.equals("")) {
+				
+				UserInfo userinfo = new UserInfo();
+				userinfo.setId(id);
+				UserInfo newUserinfo = loginMapper.getUserInfo(userinfo);
+				
+				if(newUserinfo == null) {
+					log.info("changepw failed");
+					String tmp_result = messageUtils.getMessage("text.passwordless.idnotexist");	// ID [" + id + "] does not exist.
+					mapResult.put("result", tmp_result.replace("@@@", id));
+				}
+				else {
+					userinfo.setPw(pw);
+					loginMapper.changepw(userinfo);
+					log.info("changepw completed.");
+
+					mapResult.put("result", "OK");
+				}
+			}
+			else {
+				mapResult.put("result", messageUtils.getMessage("text.passwordless.invalid"));	// Invalid id or password.
+			}
+
+			return mapResult;
+		}
+		
+		// Logout
+		@PostMapping(value="logout", produces="application/json;charset=utf8")
+		public Map<String, Object> logout(HttpServletRequest request) {
+		
+			Map<String, Object> mapResult = new HashMap<String, Object>();
+			HttpSession session = request.getSession(true);
+			String id = (String) session.getAttribute("id");
+			log.info("logout : [" + id + "]");
+			
+			session.setAttribute("id", null);
+			mapResult.put("result", "OK");
+			
+			log.info("logout : [" + id + "] completed.");
+			
+			return mapResult;
+		}
+		
+		// ------------------------------------------------ Passwordless ------------------------------------------------
 		
 		// Login
 		@PostMapping(value="passwordlessManageCheck", produces="application/json;charset=utf8")
 		public Map<String, Object> passwordlessManageCheck(
 			@RequestParam(value = "id", required = false) String id,
-			@RequestParam(value = "pwd", required = false) String pwd,
+			@RequestParam(value = "pw", required = false) String pw,
 			HttpServletRequest request) {
 			System.out.println("패스워드리스");
 			if(id == null)	id = "";
-			if(pwd == null)	pwd = "";
+			if(pw == null)	pw = "";
 
-			log.info("passwordlessManageCheck : id [" + id + "] pwd ["  + pwd + "]");
+			log.info("passwordlessManageCheck : id [" + id + "] pw ["  + pw + "]");
 
 			Map<String, Object> mapResult = new HashMap<String, Object>();
 
-			if(!id.equals("") && !pwd.equals("")) {
+			if(!id.equals("") && !pw.equals("")) {
 				
-				MemberVO vo = new MemberVO();
-				vo.setId(id);
-				vo.setPwd(pwd);
-				MemberVO newVo = loginService.checkPassword(vo);
+				UserInfo userinfo = new UserInfo();
+				userinfo.setId(id);
+				userinfo.setPw(pw);
+				UserInfo newUserinfo = loginMapper.checkPassword(userinfo);
 				
-				if(newVo != null) {
+				if(newUserinfo != null) {
 					String tmpToken = java.util.UUID.randomUUID().toString();
 					String tmpTime = Long.toString(System.currentTimeMillis());
 					
@@ -180,7 +311,7 @@ public class LoginController {
 				@RequestParam(value = "url", required = false) String url,
 				@RequestParam(value = "params", required = false) String params,
 				HttpServletRequest request, HttpServletResponse response){
-			System.out.println("로그인 컨트롤러");
+
 			ModelMap modelMap = new ModelMap();
 			String result = "";
 
@@ -243,11 +374,11 @@ public class LoginController {
 				log.info("passwordlessCallApi : url [" + url + "] params [" + params + "] userId [" + userId + "]");
 			}
 			
-			MemberVO vo = new MemberVO();
-			vo.setId(userId);
-			MemberVO newVo = loginService.getUserInfo(vo);
+			UserInfo userinfo = new UserInfo();
+			userinfo.setId(userId);
+			UserInfo newUserinfo = loginMapper.getUserInfo(userinfo);
 			
-			if(newVo == null) {
+			if(newUserinfo == null) {
 				String tmp_result = messageUtils.getMessage("text.passwordless.idnotexist");	// ID [" + id + "] does not exist.
 				modelMap.put("result", tmp_result.replace("@@@", userId));
 				return modelMap;
@@ -333,9 +464,9 @@ public class LoginController {
 						    	  // Change password after QR registration is complete
 						    	log.info("passwordlessCallApi : QR Registration Complete --> Change Password");
 						    	String newPw = Long.toString(System.currentTimeMillis()) + ":" + userId;
-								vo.setId(userId);
-								vo.setPwd(newPw);
-								loginService.changepw(vo);
+								userinfo.setId(userId);
+								userinfo.setPw(newPw);
+								loginMapper.changepw(userinfo);
 						    }
 						}
 					}
@@ -360,10 +491,10 @@ public class LoginController {
 						    	// Change password upon successful login
 						    	log.info("passwordlessCallApi : Login Success --> Change Password");
 								String newPw = Long.toString(System.currentTimeMillis()) + ":" + userId;
-								vo = new MemberVO();
-								vo.setId(userId);
-								vo.setPwd(newPw);
-								loginService.changepw(vo);
+								userinfo = new UserInfo();
+								userinfo.setId(userId);
+								userinfo.setPw(newPw);
+								loginMapper.changepw(userinfo);
 								
 								session.setAttribute("id", userId);
 							}

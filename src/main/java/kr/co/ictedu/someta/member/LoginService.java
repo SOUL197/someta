@@ -16,4 +16,20 @@ public class LoginService {
 	public Map<String, Object> loginCheck(MemberVO vo) {
 		return loginDao.loginCheck(vo);
 	}
+	
+	// -------------------------Passwordless-----------------------------
+	// Login Check
+	public MemberVO checkPassword(MemberVO vo) {
+		return loginDao.checkPassword(vo);
+	}
+    
+    // Search for User Information
+	public MemberVO getUserInfo(MemberVO vo) {
+		return loginDao.getUserInfo(vo);
+	}
+
+    // Password Change
+	public void changepw(MemberVO vo) {
+		loginDao.changepw(vo);
+	}
 }
