@@ -10,7 +10,6 @@ import lombok.Setter;
 @Alias("qnaa")
 public class Qna_aVO {
 	private int anum;
-	private int qnum;
 	private String awriter;
 	private int member_num;
 	private String acontent;

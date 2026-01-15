@@ -4,55 +4,39 @@
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="kr.co.ictedu.someta.qnaa.QnaADao">
-
-<update id="addanswer" parameterType="qnaa">
-UPDATE QNA_A SET acontent=#{acontent} WHERE anum=#{anum}
-</update>
-
-<select id="totalCount" resultType="int" parameterType="map">
-select count(*) cnt from qna_a
-<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				awriter like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				atitle like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				acontent like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-</if>
-</select>
-
-<select id="myqnaa" resultType="qnaa" parameterType="map">
-SELECT anum, awriter, acontent,adate,row_num FROM (
-SELECT anum, awriter, acontent,adate,ROW_NUMBER() 
-OVER(ORDER BY anum desc) AS row_num FROM qna_a
-<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				awriter like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				atitle like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				acontent like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-</if>
-) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end}
-</select>
-
-<delete id="delanswer" parameterType="int">
-delete from qna_a where anum=#{anum}
-</delete>
-
+	<update id="addanswer" parameterType="qnaa">
+		UPDATE QNA_A SET acontent=#{acontent} WHERE anum=#{anum} 
+	</update>
+	<select id="totalCount" resultType="int" parameterType="map">
+		select count(*) cnt from qna_a a inner join member m on a.member_num = m.num
+		<where>
+			<if test="searchType != null and searchValue !=null">
+				<choose>
+					<when test="searchType ==1"> awriter like '%' || #{searchValue} ||'%' </when>
+					<when test="searchType ==2"> atitle like '%' || #{searchValue} ||'%' </when>
+					<when test="searchType ==3"> acontent like '%' || #{searchValue} ||'%' </when>
+				</choose>
+			</if>
+		</where>
+	</select>
+	
+	<select id="myqnaa" resultType="qnaa" parameterType="map">
+		SELECT ANUM, AWRITER, ACONTENT,ADATE, row_num FROM 
+		(SELECT a.ANUM, a.AWRITER, a.ACONTENT, a.ADATE, ROW_NUMBER() OVER(ORDER BY a.ANUM DESC) AS row_num 
+		FROM QNA_A a INNER JOIN MEMBER m ON a.MEMBER_NUM = m.NUM
+		<where>
+			<if test="searchValue != null and searchValue != ''">
+				<choose>
+					<when test="searchType == 1"> AND a.awriter LIKE '%' || #{searchValue} || '%' </when>
+					<when test="searchType == 2"> AND a.acontent LIKE '%' || #{searchValue} || '%' </when>
+					<when test="searchType == 3"> AND a.acontent LIKE '%' || #{searchValue} || '%' </when>
+				</choose>
+			</if>
+		</where>
+		) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end}
+	</select>
+	<delete id="delanswer" parameterType="int">
+		delete from qna_a where anum=#{anum} 
+ 	</delete>
 
 </mapper>

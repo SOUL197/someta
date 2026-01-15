@@ -5,64 +5,54 @@
 
 <mapper namespace="kr.co.ictedu.someta.qnaq.QnaQDao">
 
-<insert id="addq" parameterType="qnaq">
-insert into qna_q values(qna_q_SEQ.nextVal,#{qtitle},#{qwriter},#{member_num},#{qcontent},sysdate)
-</insert>
+	<insert id="addq" parameterType="qnaq">
+		insert into qna_q
+		values(qna_q_SEQ.nextVal,#{qtitle},#{qwriter},#{member_num},#{qcontent},sysdate) 
+	</insert>
 
-<select id="totalCount" resultType="int" parameterType="map">
-select count(*) cnt from qna_q
-<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				qwriter like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				qtitle like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				qcontent like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-</if>
-</select>
+	<select id="totalCount" resultType="int" parameterType="map">
+		SELECT COUNT(*) FROM qna_q q INNER JOIN member m ON q.member_num = m.num
+		<where>
+			<if test="searchValue != null and searchValue != ''">
+				<choose>
+					<when test="searchType == 1"> AND q.qwriter LIKE '%' || #{searchValue} || '%' </when>
+					<when test="searchType == 2"> AND q.qtitle LIKE '%' || #{searchValue} || '%' </when>
+					<when test="searchType == 3"> AND q.qcontent LIKE '%' || #{searchValue} || '%' </when>
+				</choose>
+			</if>
+		</where>
+	</select>
 
-<select id="myqna" resultType="qnaq" parameterType="map">
-SELECT qnum, qtitle, qwriter,member_num,qcontent,qdate,row_num FROM (
-SELECT qnum, qtitle, qwriter,member_num,qcontent,qdate,ROW_NUMBER() 
-OVER(ORDER BY qnum desc) AS row_num FROM qna_q 
-<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				qwriter like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				qtitle like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				qcontent like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-</if>
-) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end}
-</select>
+	<select id="myqna" resultType="qnaq" parameterType="map">
+		SELECT qnum, qtitle, qwriter, member_num, qcontent, qdate, row_num
+		FROM ( SELECT q.qnum, q.qtitle, q.qwriter, q.member_num, q.qcontent,
+		q.qdate,ROW_NUMBER() OVER(ORDER BY q.qnum DESC) AS row_num FROM qna_q q
+		INNER JOIN member m ON q.member_num = m.num
+		<where>
+			<if test="searchValue != null and searchValue != ''">
+				<choose>
+					<when test="searchType == 1"> AND q.qwriter LIKE '%' || #{searchValue} || '%' </when>
+					<when test="searchType == 2"> AND q.qtitle LIKE '%' || #{searchValue} || '%' </when>
+					<when test="searchType == 3"> AND q.qcontent LIKE '%' || #{searchValue} || '%' </when>
+				</choose>
+			</if>
+		</where>
+		) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end}
+	</select>
 
-<select id="detail" parameterType="int">
-select * from qna_q where qnum=#{qnum}
-</select>
-<delete id="deleteq" parameterType="int">
-delete from qna_q where qnum=#{qnum}
-</delete>
+	<select id="detail" parameterType="int"> 
+		select * from qna_q where qnum=#{qnum} 
+	</select>
 
-<insert id="addanswer" parameterType="qnaa">
-insert INTO QNA_A VALUES(#{anum},#{qnum},#{awriter},#{member_num},#{acontent},sysdate)
-</insert>
-<delete id="delanswer" parameterType="int">
-delete from qna_a where anum=#{anum}
-</delete>
-
-
+	<delete id="deleteq" parameterType="int">
+ 		delete from qna_q where qnum=#{qnum} 
+ 	</delete>
+ 
+	<insert id="addanswer" parameterType="qnaa">
+ 		insert INTO QNA_A VALUES(#{anum},#{qnum},#{awriter},#{member_num},#{acontent},sysdate) 
+ 	</insert>
+ 
+	<delete id="delanswer" parameterType="int"> 
+		delete from qna_a where anum=#{anum}
+ 	</delete>
 </mapper>

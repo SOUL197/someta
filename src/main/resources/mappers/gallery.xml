@@ -34,6 +34,9 @@
 			<when test="searchType ==3">
 				content like '%' || #{searchValue} ||'%'
 			</when>
+			<when test="searchType ==4">
+				member_num like '%' || #{searchValue} ||'%'
+			</when>
 		</choose>
 	</where>
 </if>
@@ -58,6 +61,9 @@
 			</when>
 			<when test="searchType ==3">
 				content like '%' || #{searchValue} ||'%'
+			</when>
+			<when test="searchType ==4">
+				member_num like '%' || #{searchValue} ||'%'
 			</when>
 		</choose>
 	</where>
