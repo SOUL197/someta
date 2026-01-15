@@ -14,7 +14,7 @@
 
 	<!-- Search for User Information -->
 	<select id="getUserInfo" parameterType="mem" resultType="mem">
-		SELECT id, pwd, regdate
+		SELECT num, nickname, id, pwd, regdate
 		FROM MEMBER
 		WHERE id = #{id}
 	</select>
