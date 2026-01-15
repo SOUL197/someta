@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  <mapper namespace="kr.co.ictedu.someta.survey.SurveyDAO">
+  
+  <select id="maxSurveyNum" resultType="Long">
+  	select Max(num) from survey
+  </select>
+  
+  <select id="findBySNUM" parameterType="Long" resultType="surveyresultvo">
+		SELECT s.num AS surveyNum, s.sub AS surveySub, s.code AS surveyCode,
+		s.sdate AS surveyDate, sc.SURVEYTYPE AS surveytype, sc.SUBCODE AS
+		subCode,
+		sc.SURVEYTITLE AS surveytitle, sc.SURVEYCNT AS surveycnt
+		FROM SURVEY s, SURVEYCONTENT sc WHERE s.NUM = sc.SUBCODE AND s.NUM = #{num}
+  </select>
+  
+  <insert id="saveSurvey" parameterType="surveyvo">
+		INSERT INTO survey (num,code,sdate,sub) VALUES
+		(survey_seq.NEXTVAL,#{code, jdbcType=INTEGER},sysdate,#{sub, jdbcType=VARCHAR})
+  </insert>
+  
+  <insert id="saveSurveyContentList" parameterType="java.util.List">
+		INSERT ALL 
+		<foreach collection="list" item="item">
+			INTO SURVEYCONTENT (subcode,surveycnt,surveytitle,surveytype)
+			VALUES
+			(survey_seq.CURRVAL,#{item.surveycnt},#{item.surveytitle},#{item.surveytype})
+		</foreach>
+		SELECT * FROM dual
+  </insert>
+  
+  <update id="incrementSurveyCount">
+		UPDATE SURVEYCONTENT SET surveycnt = surveycnt+1 WHERE subcode=#{subcode} AND surveytype=#{surveytype}
+  </update>
+  
+  </mapper>
