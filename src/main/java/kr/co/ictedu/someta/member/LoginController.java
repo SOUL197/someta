@@ -3,6 +3,7 @@ package kr.co.ictedu.someta.member;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import kr.co.ictedu.someta.pwl.MessageUtils;
+import kr.co.ictedu.someta.vo.LoginLogVO;
 import kr.co.ictedu.someta.vo.MemberVO;
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,6 +94,12 @@ public class LoginController {
 		}
 		
 		return loginMember; // username, id
+	}
+	
+	@GetMapping("/loginlog")
+	public List<LoginLogVO> loginlog(HttpSession session){
+		MemberVO loginMember = (MemberVO) session.getAttribute("loginMember");
+		return loginService.loginlog(loginMember.getNum());
 	}
 	
 	// ------------------------------------------------ Passwordless ------------------------------------------------

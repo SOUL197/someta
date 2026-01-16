@@ -37,7 +37,7 @@ public class LoginLoginAdvice {
 			MemberVO vo = (MemberVO) session.getAttribute("loginMember");
 			
 			if (vo != null) { // 로그인 된 정보가 있다는 것
-				log.setIdn(vo.getId());
+				log.setIdn(vo.getNum());
 				log.setStatus(status); // 로그인 / 로그아웃
 				log.setReip(request.getRemoteAddr());
 				String userAgent = request.getHeader("User-Agent");

@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 public class LoginLogVO {
 	private int lognum;
-	private String idn;
+	private int idn;
 	private String reip;
 	private String uagent;
 	private String status;
