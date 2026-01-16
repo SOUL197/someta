@@ -37,7 +37,7 @@ public class LoginLoginAdvice {
 			MemberVO vo = (MemberVO) session.getAttribute("loginMember");
 			
 			if (vo != null) { // 로그인 된 정보가 있다는 것
-				log.setIdn(vo.getId());
+				log.setIdn(vo.getNum());
 				log.setStatus(status); // 로그인 / 로그아웃
 				log.setReip(request.getRemoteAddr());
 				String userAgent = request.getHeader("User-Agent");
@@ -81,5 +81,38 @@ public class LoginLoginAdvice {
 		
 		System.out.println("return :"+rpath);
 		return rpath;
+	}
+	
+	@Around("execution(* kr.co.ictedu.someta.member.LoginController.passwordlessCallApi(..))")
+	public Object passwordlessLoginLogger(ProceedingJoinPoint jp) throws Throwable {
+
+	    Object result = jp.proceed();
+	    Object[] fd = jp.getArgs();
+
+	    HttpServletRequest request = (HttpServletRequest) fd[2];
+	    HttpSession session = request.getSession(false);
+	    
+	    if (session == null) {
+	    	return result;
+	    }
+
+	    MemberVO vo = (MemberVO) session.getAttribute("loginMember");
+	    if (vo == null) {
+	    	return result;
+	    }
+
+	    if (session.getAttribute("PASSWORDLESS_LOGIN_LOGGED") == null) {
+	        LoginLogVO log = new LoginLogVO();
+	        log.setIdn(vo.getNum());
+	        log.setStatus("login");
+	        log.setReip(request.getRemoteAddr());
+	        log.setUagent(UserAgentUtils.parseAgent(request.getHeader("User-Agent")));
+
+	        myLogDao.addLoginLogging(log);
+	        
+	        session.setAttribute("PASSWORDLESS_LOGIN_LOGGED", true);
+	    }
+
+	    return result;
 	}
 }

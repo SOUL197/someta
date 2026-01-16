@@ -22,21 +22,21 @@
 	</select>
 	
 	<select id="likeCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS likecnt FROM like_request WHERE RECEIVER_ID = #{userid}
+		SELECT COUNT(*) AS likecnt FROM like_request WHERE RECEIVER_ID = #{nickname}
 	</select>
 	<select id="matchCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS matchcnt FROM like_request WHERE RECEIVER_ID = #{userid} AND status = 'accepted'
+		SELECT COUNT(*) AS matchcnt FROM like_request WHERE RECEIVER_ID = #{nickname} AND status = 'accepted'
 	</select>
 	<select id="dateCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS datecnt FROM date_request WHERE RECEIVER_ID = #{userid} AND status = 'accepted'
+		SELECT COUNT(*) AS datecnt FROM date_request WHERE RECEIVER_ID = #{nickname} AND status = 'accepted'
 	</select>
 	<select id="responseCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS norescnt FROM like_request WHERE RECEIVER_ID = #{userid} and STATUS != 'pending'
+		SELECT COUNT(*) AS norescnt FROM like_request WHERE RECEIVER_ID = #{nickname} and STATUS != 'pending'
 	</select>
 	<select id="sstimeAverage" resultType="int" parameterType="mem">
 		SELECT ROUND(tsum/total) AS avgsstime FROM(
 		SELECT SUM(TO_CHAR(SSTIME, 'HH24')) AS tsum, COUNT(*) AS total
-		FROM LOGINLOG WHERE IDN = #{userid} AND STATUS = 'login')
+		FROM LOGINLOG WHERE IDN = #{num} AND STATUS = 'login')
 	</select>
 	
 	<select id="dauCount" resultType="int">
