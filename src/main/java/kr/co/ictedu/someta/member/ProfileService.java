@@ -20,4 +20,9 @@ public class ProfileService {
 	public void updateProfile(ProfileVO vo) {
 		profileDao.updateProfile(vo);
 	}
+	
+	public ProfileVO getProfile(int memberid) {
+	    return profileDao.selectProfile(memberid);
+	}
+
 }

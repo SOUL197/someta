@@ -8,4 +8,5 @@ import kr.co.ictedu.someta.vo.ProfileVO;
 public interface ProfileDao {
 	void insertProfile(ProfileVO vo);
 	void updateProfile(ProfileVO vo);
+	ProfileVO selectProfile(int memberid);
 }

@@ -17,30 +17,33 @@
 		into GALLERY_img (galleryid, imagename) VALUES (#{id}, #{image.imagename})
 		</foreach>
 	</insert>
+	
 	<select id="list" resultType="map" parameterType="map">
-	SELECT g.num, g.TITLE,g.WRITER,TO_CHAR(g.CONTENTS) AS CONTENTS,g.HIT,g.elike,g.REIP,g.GDATE, 
+	SELECT g.num, g.TITLE,g.WRITER,TO_CHAR(g.CONTENTS) AS CONTENTS,g.HIT,g.elike,g.REIP,g.GDATE,g.member_num,
 	g.ROW_NUM,gc.IMAGENAME FROM (
-	SELECT num, title, writer,contents,hit,elike,reip,gdate,
+	SELECT num, title, writer,contents,hit,elike,reip,gdate,member_num,
 	ROW_NUMBER() OVER(ORDER BY num desc) AS row_num FROM GALLERY
-<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				writer like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				title like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				content like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==4">
-				member_num like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-</if>
-		) g , (SELECT GALLERYID, imagename, rn FROM (SELECT GALLERYID, imagename,
+		<where>
+            <if test="mypage == 'true'">
+                AND member_num = #{num}
+            </if>
+
+            <if test="searchType != null and searchValue != null and searchValue != ''">
+                <choose>
+                    <when test="searchType == 1">
+                        AND writer LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 2">
+                        AND title LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 3">
+                        AND contents LIKE '%' || #{searchValue} || '%'
+                    </when>
+                </choose>
+            </if>
+        </where>
+		) g , (SELECT GALLERYID, imagename, rn FROM (SELECT GALLERYID,
+		imagename,
 		ROW_NUMBER() OVER(PARTITION BY galleryid ORDER BY
 		imagename ASC) AS rn FROM GALLERY_img
 		)
@@ -50,27 +53,28 @@
 	
 	<select id="totalCount" resultType="int" parameterType="map">
 	select count(*) cnt from gallery
-	<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				writer like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				title like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				content like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==4">
-				member_num like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-	</if>
+		<where>
+            <if test="mypage == 'true'">
+                AND member_num = #{num}
+            </if>
+            <if test="searchType != null and searchValue != null and searchValue != ''">
+                <choose>
+                    <when test="searchType == 1">
+                        AND writer LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 2">
+                        AND title LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 3">
+                        AND contents LIKE '%' || #{searchValue} || '%'
+                    </when>
+                </choose>
+            </if>
+        </where>
 	</select>
+	
 	<select id="detail" resultType="map" parameterType="map">
-	SELECT g.num,g.title,g.writer,TO_CHAR(g.contents) AS contents, g.hit,g.elike,g.reip,
+	SELECT g.num,g.title,g.writer,TO_CHAR(g.contents) AS contents, g.hit,g.elike,g.reip,g.member_num,
 g.gdate,gc.galleryid,gc.imagename FROM 
 GALLERY g, GALLERY_img gc WHERE g.num = gc.galleryid AND g.num=#{num}
 	</select>

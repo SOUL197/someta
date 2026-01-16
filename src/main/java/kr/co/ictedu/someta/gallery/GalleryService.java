@@ -52,6 +52,7 @@ public class GalleryService {
 		result.put("elike", rows.get(0).get("ELIKE"));
 		result.put("reip", rows.get(0).get("REIP"));
 		result.put("gdate", rows.get(0).get("GDATE"));
+		result.put("member_num", rows.get(0).get("MEMBER_NUM"));
 		//이미지 리스트 따로 모으기
 		List<String> images=new ArrayList<>();
 		for(Map<String, Object> row:rows) {

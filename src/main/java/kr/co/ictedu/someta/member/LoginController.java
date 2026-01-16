@@ -371,9 +371,11 @@ public class LoginController {
 								vo = new MemberVO();
 								vo.setId(userId);
 								vo.setPwd(newPw);
+								vo.setNickname(newVo.getNickname().toString());
+								vo.setNum(newVo.getNum());
 								loginService.changepw(vo);
 								
-								session.setAttribute("id", userId);
+								session.setAttribute("loginMember", vo);
 							}
 					    }
 					} catch(ParseException pe) {
@@ -390,6 +392,7 @@ public class LoginController {
 				jsonResult = (JSONObject) parser.parse(result);
 				modelMap.put("data", jsonResult.get("data"));
 				modelMap.put("result", jsonResult.get("result"));
+				modelMap.put("code", jsonResult.get("code"));
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
