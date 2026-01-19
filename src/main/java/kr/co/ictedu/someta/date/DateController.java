@@ -61,5 +61,11 @@ public class DateController {
 		MemberVO loginMember = (MemberVO) session.getAttribute("loginMember");
 		return dateService.getSentRequest(loginMember.getNickname());
 	}
+	
+	@GetMapping("/checkdate")
+	public int CheckLike(HttpSession session) {
+		MemberVO loginMember = (MemberVO) session.getAttribute("loginMember");
+		return dateService.checkPending(loginMember.getNickname());
+	}
 
 }

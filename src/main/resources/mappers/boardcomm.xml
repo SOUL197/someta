@@ -21,4 +21,17 @@ DELETE FROM BOARD_COMM WHERE comm_num=#{num}
 <select id="totalCount" resultType="int" parameterType="map">
 select count(*) cnt from board_comm where board_num=#{board_num}
 </select>
+
+<update id="plusComm">
+    UPDATE BOARD 
+    SET comm_count = comm_count + 1 
+    WHERE num = #{num}
+</update>
+
+<update id="minusComm">
+    UPDATE BOARD 
+    SET comm_count = comm_count - 1 
+    WHERE num = #{num}
+</update>
+
 </mapper>

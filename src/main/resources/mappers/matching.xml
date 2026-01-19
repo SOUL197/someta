@@ -77,8 +77,8 @@
   </select>
   
   <select id="detail" resultType="map" parameterType="int">
-  	SELECT m.num, m.nickname, m.birth, i.profileimage
-	FROM (SELECT m.num,m.NICKNAME, p.BIRTH
+  	SELECT m.*, i.profileimage
+	FROM (SELECT m.num,m.NICKNAME, p.*
 	FROM member M, member_PROFILE p WHERE m.NUM=p.MEMBERID) M,
 	(SELECT userid,profileIMAGE FROM MEMBER_PROFILE_IMAGES) i
 	WHERE m.num =+ i.userid AND m.num = #{num} ORDER BY i.profileIMAGE asc

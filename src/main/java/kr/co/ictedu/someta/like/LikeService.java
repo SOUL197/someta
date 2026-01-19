@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +17,7 @@ public class LikeService {
 
 	@Autowired
 	private LikeRequestDao likeRequestDao;
-	
+
 	@Transactional
 	public void sendRequest(String from, String to) {
 		int exists = likeRequestDao.checkRequestExists(from, to);
@@ -70,4 +71,7 @@ public class LikeService {
 		return result;
 	}
 
+	public int checkPending(String nickname) {
+		return likeRequestDao.checkPending(nickname);
+	}
 }

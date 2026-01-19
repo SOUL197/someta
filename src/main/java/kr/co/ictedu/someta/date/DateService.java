@@ -49,4 +49,8 @@ public class DateService {
 	public int countDate(String nickname) {
 		return dateDao.countDate(nickname);
 	}
+
+	public int checkPending(String nickname) {
+		return dateDao.checkPending(nickname);
+	}
 }

@@ -15,7 +15,7 @@ public class MatchingService {
 
 	@Autowired
 	private MatchingDao matchingDao;
-	
+
 	public void profileUpdate(MemberProfileImageVO vo) {
 		matchingDao.update(vo);
 	}
@@ -27,29 +27,28 @@ public class MatchingService {
 	public int totalCount(Map<String, Object> map) {
 		return matchingDao.totalCount(map);
 	}
-	
-	public Map<String,Object> detail(int num) {
+
+	public Map<String, Object> detail(int num) {
 		List<Map<String, Object>> rows = matchingDao.detail(num);
-		
+
 		if (rows.isEmpty())
 			return null;
-		
+
 		Map<String, Object> result = new HashMap<>();
-		result.put("num", rows.get(0).get("NUM"));
-		result.put("nickname", rows.get(0).get("NICKNAME"));
-		result.put("birth", rows.get(0).get("BIRTH"));
+		result.putAll(rows.get(0));
+		result.remove("PROFILEIMAGE");
 		List<String> images = new ArrayList<>();
 		for (Map<String, Object> row : rows) {
 			images.add((String) row.get("PROFILEIMAGE"));
 		}
-		result.put("profileimage", images);
+		result.put("PROFILEIMAGE", images);
 		return result;
 	}
-	
+
 	public String getProfileImage(String nickname) {
-        String profileImage = matchingDao.getProfileImage(nickname);
-        // 이미지가 없을 경우 기본 이미지 반환 (선택 사항)
-        return (profileImage != null) ? profileImage : "Default_user.jpg";
-    }
+		String profileImage = matchingDao.getProfileImage(nickname);
+		// 이미지가 없을 경우 기본 이미지 반환 (선택 사항)
+		return (profileImage != null) ? profileImage : "Default_user.jpg";
+	}
 
 }
