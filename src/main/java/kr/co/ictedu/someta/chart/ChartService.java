@@ -13,20 +13,25 @@ public class ChartService {
 	
 	public int userTotalCount() {return chartDao.userTotalCount();}
 	public int activeUserCount() {return chartDao.activeUserCount();}
-	public int dailyMatchCount() {return chartDao.dailyMatchCount();}
 	public List<Map<String, Object>> genderCount() {return chartDao.genderCount();}
 	public List<Map<String, Object>> addrCount() {return chartDao.addrCount();}
+	public List<Map<String, Object>> districtCount(String sido) {return chartDao.districtCount(sido);}
+	public List<Map<String, Object>> dailyMatch() {return chartDao.dailyMatch();}
 	
-	public int likeCount(String userid) {return chartDao.likeCount(userid);}
-	public int matchCount(String userid) {return chartDao.matchCount(userid);}
-	public int dateCount(String userid) {return chartDao.dateCount(userid);}
-	public int responseCount(String userid) {return chartDao.responseCount(userid);}
-	public int sstimeAverage(String userid) {return chartDao.sstimeAverage(userid);}
+	public int likeCount(String nickname) {return chartDao.likeCount(nickname);}
+	public int matchCount(String nickname) {return chartDao.matchCount(nickname);}
+	public int dateCount(String nickname) {return chartDao.dateCount(nickname);}
+	public List<Map<String, Object>> weeklyMatch(String nickname) {return chartDao.weeklyMatch(nickname);}
+	public List<Map<String, Object>> activityHeatmap(int num) {return chartDao.activityHeatmap(num);}
+	public int responseCount(String nickname) {return chartDao.responseCount(nickname);}
+	public double avgResponseRate() {return chartDao.avgResponseRate();}
 	
 	public int dauCount() {return chartDao.dauCount();}
-	public int wauCount() {return chartDao.wauCount();}
 	public int mauCount() {return chartDao.mauCount();}
-	public int yauCount() {return chartDao.yauCount();}
-	public int visitorCount() {return chartDao.visitorCount();}
+	public List<Map<String, Object>> adminFunnel() {return chartDao.adminFunnel();}
+	public List<Map<String, Object>> genderAge() {return chartDao.genderAge();}
+	public List<Map<String, Object>> weeklyVisitor() {return chartDao.weeklyVisitor();}
 	public int churnCount() {return chartDao.churnCount();}
+	public int visitorCount() {return chartDao.visitorCount();}
+	public int newMemberCount() {return chartDao.newMemberCount();}
 }

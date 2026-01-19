@@ -12,53 +12,48 @@
 SELECT num, title, writer,member_num,content,hit,elike,reip,bdate,imgn,row_num FROM (
 SELECT num, title, writer,member_num,content,hit,elike,reip,bdate,imgn, ROW_NUMBER() 
 OVER(ORDER BY num desc) AS row_num FROM BOARD 
-
-<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				writer like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				title like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				content like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==4">
-				member_num like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-</if>
-
+		<where>
+            <if test="mypage == 'true'">
+                AND member_num = #{num}
+            </if>
+            <if test="searchType != null and searchValue != null and searchValue != ''">
+                <choose>
+                    <when test="searchType == 1">
+                        AND writer LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 2">
+                        AND title LIKE '%' || #{searchValue} || '%'
+                    </when>
+                    <when test="searchType == 3">
+                        AND content LIKE '%' || #{searchValue} || '%'
+                    </when>
+                </choose>
+            </if>
+        </where>
 ) numbered_rows WHERE row_num BETWEEN #{begin} AND #{end}
 </select>
 
-
-<select id="totalCount" resultType="int" parameterType="map">
-select count(*) cnt from board
-<if test="searchType != null and searchValue !=null">
-	<where>
-		<choose>
-			<when test="searchType ==1">
-				writer like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==2">
-				title like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==3">
-				content like '%' || #{searchValue} ||'%'
-			</when>
-			<when test="searchType ==4">
-				member_num like '%' || #{searchValue} ||'%'
-			</when>
-		</choose>
-	</where>
-</if>
-</select>
-
-
+	<select id="totalCount" resultType="int" parameterType="map">
+		select count(*) cnt from board
+			<where>
+            	<if test="mypage == 'true'">
+                	AND member_num = #{num}
+            	</if>
+            	<if test="searchType != null and searchValue != null and searchValue != ''">
+                	<choose>
+                    	<when test="searchType == 1">
+                        	AND writer LIKE '%' || #{searchValue} || '%'
+                    	</when>
+                    	<when test="searchType == 2">
+                        	AND title LIKE '%' || #{searchValue} || '%'
+                    	</when>
+                    	<when test="searchType == 3">
+                        	AND content LIKE '%' || #{searchValue} || '%'
+                    	</when>
+                	</choose>
+            	</if>
+        	</where>
+	</select>
 <update id="hit" parameterType="int">
 update board set hit=hit+1 where num=#{num}
 </update>

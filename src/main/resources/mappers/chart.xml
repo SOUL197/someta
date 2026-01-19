@@ -4,64 +4,184 @@
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.co.ictedu.someta.chart.ChartDao">
 
+	<!-- ===========================
+       방문자 통계
+  	============================ -->
+	<!-- 총 가입자 수 -->
 	<select id="userTotalCount" resultType="int">
-		SELECT COUNT(*) AS usercnt FROM MEMBER
+	    SELECT COUNT(*) FROM MEMBER
 	</select>
+	
+	<!-- 활성 사용자 (최근 7일 로그인) -->
 	<select id="activeUserCount" resultType="int">
-		SELECT COUNT(DISTINCT idn) AS activeuser FROM loginlog WHERE SSTIME > (SYSDATE-7)
+	    SELECT COUNT(DISTINCT idn) FROM loginlog
+	    WHERE SSTIME > (SYSDATE-7)
 	</select>
-	<select id="dailyMatchCount" resultType="int">
-		SELECT COUNT(action_time) AS dailymatch FROM like_request_log
-		WHERE ACTION_TIME BETWEEN TRUNC(SYSDATE)-1 AND TRUNC(SYSDATE)  AND status = 'accepted'
-	</select>
+	
+	<!-- 성별 비율 -->
 	<select id="genderCount" resultType="map">
-		SELECT gender, COUNT(*) AS gendercnt FROM member_profile group by gender
+	    SELECT gender, COUNT(*) AS cnt FROM member_profile GROUP BY gender
 	</select>
+	
+	<!-- 시/도별 사용자 -->
 	<select id="addrCount" resultType="map">
-		SELECT address, COUNT(*) AS addrcnt FROM member_profile GROUP BY address
+	    SELECT 
+        NVL(SUBSTR(address, 1, INSTR(address, ' ') - 1),'기타') AS sido,
+        COUNT(*) AS cnt
+	    FROM member_profile
+	    GROUP BY SUBSTR(address, 1, INSTR(address, ' ') - 1)
 	</select>
 	
-	<select id="likeCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS likecnt FROM like_request WHERE RECEIVER_ID = #{nickname}
-	</select>
-	<select id="matchCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS matchcnt FROM like_request WHERE RECEIVER_ID = #{nickname} AND status = 'accepted'
-	</select>
-	<select id="dateCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS datecnt FROM date_request WHERE RECEIVER_ID = #{nickname} AND status = 'accepted'
-	</select>
-	<select id="responseCount" resultType="int" parameterType="mem">
-		SELECT COUNT(*) AS norescnt FROM like_request WHERE RECEIVER_ID = #{nickname} and STATUS != 'pending'
-	</select>
-	<select id="sstimeAverage" resultType="int" parameterType="mem">
-		SELECT ROUND(tsum/total) AS avgsstime FROM(
-		SELECT SUM(TO_CHAR(SSTIME, 'HH24')) AS tsum, COUNT(*) AS total
-		FROM LOGINLOG WHERE IDN = #{num} AND STATUS = 'login')
+	<!-- 구 단위 Drilldown -->
+	<select id="districtCount" resultType="map" parameterType="string">
+	    SELECT 
+        SUBSTR(address, INSTR(address,' ')+1) AS district,
+        COUNT(*) AS value
+	    FROM member_profile
+	    WHERE SUBSTR(address, 1, INSTR(address, ' ') - 1) = #{sido}
+	    GROUP BY SUBSTR(address, INSTR(address,' ')+1)
 	</select>
 	
+	<!-- 최근 30일 매칭 수 -->
+	<select id="dailyMatch" resultType="map">
+	    SELECT TRUNC(ACTION_TIME) AS day, COUNT(*) AS count
+	    FROM like_request_log
+	    WHERE ACTION_TIME >= TRUNC(SYSDATE)-30
+	      AND status='accepted'
+	    GROUP BY TRUNC(ACTION_TIME)
+	    ORDER BY TRUNC(ACTION_TIME)
+	</select>
+	
+	<!-- ===========================
+       사용자 통계
+  	============================ -->
+	<!-- 받은 좋아요 -->
+	<select id="likeCount" resultType="int" parameterType="string">
+	    SELECT COUNT(*) FROM like_request WHERE RECEIVER_ID=#{nickname}
+	</select>
+	
+	<!-- 매칭 수 -->
+	<select id="matchCount" resultType="int" parameterType="string">
+	    SELECT COUNT(*) FROM like_request WHERE RECEIVER_ID=#{nickname} AND status='accepted'
+	</select>
+	
+	<!-- 데이트 수 -->
+	<select id="dateCount" resultType="int" parameterType="string">
+	    SELECT COUNT(*) FROM date_request WHERE RECEIVER_ID=#{nickname} AND status='accepted'
+	</select>
+	
+	<!-- 주간 매칭 추이 -->
+	<select id="weeklyMatch" resultType="map" parameterType="string">
+	    SELECT TRUNC(REQUEST_DATE) AS day, COUNT(*) AS count
+	    FROM like_request
+	    WHERE RECEIVER_ID=#{nickname} AND status='accepted' AND REQUEST_DATE >= TRUNC(SYSDATE)-6
+	    GROUP BY TRUNC(REQUEST_DATE)
+	    ORDER BY TRUNC(REQUEST_DATE)
+	</select>
+	
+	<!-- 활동 시간대 (Heatmap) -->
+	<select id="activityHeatmap" resultType="map" parameterType="int">
+	    SELECT TO_CHAR(SSTIME,'HH24') AS hour,
+	           TO_CHAR(SSTIME,'D') AS weekday,
+	           COUNT(*) AS cnt
+	    FROM loginlog
+	    WHERE IDN=#{num} AND STATUS='login'
+	    GROUP BY TO_CHAR(SSTIME,'HH24'), TO_CHAR(SSTIME,'D')
+	</select>
+	
+	<!-- 응답률 -->
+	<select id="responseCount" resultType="int" parameterType="string">
+	    SELECT COUNT(*) FROM like_request
+	    WHERE RECEIVER_ID=#{nickname} AND STATUS!='pending'
+	</select>
+	
+	<!-- 전체 회원 평균 응답률 -->
+	<select id="avgResponseRate" resultType="double">
+	  SELECT NVL(AVG(resp_rate),0) AS avg_rate FROM (
+	    SELECT
+	      nvl(COUNT(CASE WHEN STATUS != 'pending' THEN 1 END)/NULLIF(COUNT(*),0), 0) AS resp_rate
+	    FROM like_request
+	    GROUP BY RECEIVER_ID
+	  )
+	</select>
+	
+	<!-- ===========================
+       관리자 통계
+  	============================ -->
+	<!-- DAU -->
 	<select id="dauCount" resultType="int">
-		SELECT COUNT(UNIQUE idn) AS dau FROM LOGINLOG
-		WHERE SSTIME BETWEEN TRUNC(SYSDATE)-1 AND TRUNC(SYSDATE) AND STATUS = 'login'
+		    SELECT COUNT(DISTINCT idn) FROM loginlog
+		    WHERE STATUS='login' AND SSTIME BETWEEN TRUNC(SYSDATE)-1 AND TRUNC(SYSDATE)
 	</select>
-	<select id="wauCount" resultType="int">
-		SELECT COUNT(UNIQUE idn) AS wau FROM LOGINLOG
-		WHERE SSTIME BETWEEN TRUNC(SYSDATE)-7 AND TRUNC(SYSDATE) AND STATUS = 'login'
-	</select>
+	
+	<!-- MAU -->
 	<select id="mauCount" resultType="int">
-		SELECT COUNT(UNIQUE idn) AS mau FROM LOGINLOG
-		WHERE SSTIME BETWEEN ADD_MONTHS(TRUNC(SYSDATE),-1) AND TRUNC(SYSDATE) AND STATUS = 'login'
+	    SELECT COUNT(DISTINCT idn) FROM loginlog
+	    WHERE STATUS='login' AND SSTIME >= ADD_MONTHS(TRUNC(SYSDATE),-1)
 	</select>
-	<select id="yauCount" resultType="int">
-		SELECT COUNT(UNIQUE idn) AS yau FROM LOGINLOG
-		WHERE SSTIME BETWEEN ADD_MONTHS(TRUNC(SYSDATE),-12) AND TRUNC(SYSDATE) AND STATUS = 'login'
+	
+	<!-- 퍼널 -->
+	<select id="adminFunnel" resultType="map">
+	    SELECT '가입' AS stage, COUNT(*) AS count FROM MEMBER
+	    UNION ALL
+	    SELECT '좋아요', COUNT(*) FROM like_request
+	    UNION ALL
+	    SELECT '첫 매칭', COUNT(*) FROM like_request WHERE status='accepted'
+	    UNION ALL
+	    SELECT '데이트', COUNT(*) FROM date_request WHERE status='accepted'
 	</select>
-	<select id="visitorCount" resultType="int">
-		SELECT COUNT(UNIQUE reip) FROM VISITORSLOG
+	
+	<!-- 성별/연령 분포 -->
+	<select id="genderAge" resultType="map">
+	  SELECT gender,
+         CASE 
+           WHEN FLOOR(MONTHS_BETWEEN(SYSDATE,birth)/12) BETWEEN 20 AND 29 THEN '20대'
+           WHEN FLOOR(MONTHS_BETWEEN(SYSDATE,birth)/12) BETWEEN 30 AND 39 THEN '30대'
+           WHEN FLOOR(MONTHS_BETWEEN(SYSDATE,birth)/12) BETWEEN 40 AND 49 THEN '40대'
+           ELSE '50대+' 
+         END AS age_group,
+         COUNT(*) AS count
+	  FROM member_profile
+	  GROUP BY gender,
+           CASE 
+           WHEN FLOOR(MONTHS_BETWEEN(SYSDATE,birth)/12) BETWEEN 20 AND 29 THEN '20대'
+           WHEN FLOOR(MONTHS_BETWEEN(SYSDATE,birth)/12) BETWEEN 30 AND 39 THEN '30대'
+           WHEN FLOOR(MONTHS_BETWEEN(SYSDATE,birth)/12) BETWEEN 40 AND 49 THEN '40대'
+           ELSE '50대+' 
+           END
 	</select>
+	
+	<!-- 주간 방문자 추이 -->
+	<select id="weeklyVisitor" resultType="map">
+	    SELECT TRUNC(SSTIME) AS day, COUNT(DISTINCT idn) AS count
+	    FROM loginlog
+	    WHERE SSTIME >= TRUNC(SYSDATE)-6
+	    GROUP BY TRUNC(SSTIME)
+	    ORDER BY TRUNC(SSTIME)
+	</select>
+	
+	<!-- 이탈률 -->
 	<select id="churnCount" resultType="int">
-		SELECT COUNT(DISTINCT idn) AS churn FROM (
-		SELECT idn, sstime, status, ADD_MONTHS(SYSDATE,-1) AS onemonth, ROW_NUMBER() OVER(PARTITION BY idn ORDER BY sstime desc) AS row_num FROM LOGINLOG WHERE STATUS = 'login'
-		) WHERE row_num = 1 AND onemonth > sstime
+	  SELECT COUNT(DISTINCT idn) FROM (
+	    SELECT idn, sstime,
+	           ROW_NUMBER() OVER(PARTITION BY idn ORDER BY sstime DESC) AS rn,
+	           ADD_MONTHS(SYSDATE,-1) AS onemonth
+	    FROM loginlog WHERE STATUS='login'
+	  ) WHERE rn=1 AND onemonth > sstime
+	</select>
+	
+	<!-- 최근 30일 방문자 수 -->
+	<select id="visitorCount" resultType="int">
+	  SELECT COUNT(DISTINCT reip) 
+	  FROM VISITORSLOG
+	  WHERE sstime > (SYSDATE-30)
+	</select>
+	
+	<!-- 최근 30일 가입자 수 -->
+	<select id="newMemberCount" resultType="int">
+	  SELECT COUNT(*) 
+	  FROM MEMBER
+	  WHERE reg_date > (SYSDATE-30)
 	</select>
 	
 </mapper>

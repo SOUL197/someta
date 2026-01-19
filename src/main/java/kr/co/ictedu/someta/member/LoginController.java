@@ -3,6 +3,7 @@ package kr.co.ictedu.someta.member;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import kr.co.ictedu.someta.pwl.MessageUtils;
+import kr.co.ictedu.someta.vo.LoginLogVO;
 import kr.co.ictedu.someta.vo.MemberVO;
 import lombok.extern.slf4j.Slf4j;
 
@@ -94,6 +96,12 @@ public class LoginController {
 		return loginMember; // username, id
 	}
 	
+	@GetMapping("/loginlog")
+	public List<LoginLogVO> loginlog(HttpSession session){
+		MemberVO loginMember = (MemberVO) session.getAttribute("loginMember");
+		return loginService.loginlog(loginMember.getNum());
+	}
+	
 	// ------------------------------------------------ Passwordless ------------------------------------------------
 	@Autowired
 	MessageUtils messageUtils;
@@ -136,6 +144,7 @@ public class LoginController {
 			@RequestParam(value = "id", required = false) String id,
 			@RequestParam(value = "pwd", required = false) String pwd,
 			HttpServletRequest request) {
+			System.out.println("패스워드리스");
 			if(id == null)	id = "";
 			if(pwd == null)	pwd = "";
 
@@ -155,6 +164,7 @@ public class LoginController {
 					String tmpTime = Long.toString(System.currentTimeMillis());
 					
 					log.info("passwordlessManageCheck : token [" + tmpToken + "] time [" + tmpTime + "]");
+					
 					HttpSession session = request.getSession(true);
 					session.setAttribute("PasswordlessToken", tmpToken);
 					session.setAttribute("PasswordlessTime", tmpTime);
@@ -178,6 +188,7 @@ public class LoginController {
 				@RequestParam(value = "url", required = false) String url,
 				@RequestParam(value = "params", required = false) String params,
 				HttpServletRequest request, HttpServletResponse response){
+			System.out.println("로그인 컨트롤러");
 			ModelMap modelMap = new ModelMap();
 			String result = "";
 
@@ -380,8 +391,8 @@ public class LoginController {
 			try {
 				jsonResult = (JSONObject) parser.parse(result);
 				modelMap.put("data", jsonResult.get("data"));
-				modelMap.put("code", jsonResult.get("code"));
 				modelMap.put("result", jsonResult.get("result"));
+				modelMap.put("code", jsonResult.get("code"));
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

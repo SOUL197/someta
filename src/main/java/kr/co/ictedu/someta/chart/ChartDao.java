@@ -9,20 +9,25 @@ import org.apache.ibatis.annotations.Mapper;
 public interface ChartDao {
 	int userTotalCount();
 	int activeUserCount();
-	int dailyMatchCount();
 	List<Map<String, Object>> genderCount();
-	List<Map<String, Object>> addrCount();
+	List<Map<String, Object>> addrCount();	
+	List<Map<String, Object>> districtCount(String sido);	
+	List<Map<String, Object>> dailyMatch();
 	
-	int likeCount(String userid);
-	int matchCount(String userid);
-	int dateCount(String userid);
-	int responseCount(String userid);
-	int sstimeAverage(String userid);
+	int likeCount(String nickname);
+	int matchCount(String nickname);
+	int dateCount(String nickname);
+	List<Map<String, Object>> weeklyMatch(String nickname);
+	List<Map<String, Object>> activityHeatmap(int num);
+	int responseCount(String nickname);
+	double avgResponseRate();
 	
 	int dauCount();
-	int wauCount();
 	int mauCount();
-	int yauCount();
-	int visitorCount();
+	List<Map<String, Object>> adminFunnel();
+	List<Map<String, Object>> genderAge();
+	List<Map<String, Object>> weeklyVisitor();
 	int churnCount();
+	int visitorCount();
+	int newMemberCount();
 }
