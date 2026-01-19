@@ -5,12 +5,12 @@
 
 <mapper namespace="kr.co.ictedu.someta.board.BoardDAO">
 <insert id="add" parameterType="boardvo">
-	insert into board values(board_seq.nextVal,#{title},#{writer},#{member_num},#{content},#{imgn},0,0,#{reip},sysdate)
+	insert into board values(board_seq.nextVal,#{title},#{writer},#{member_num},#{content},#{imgn},0,0,#{reip},sysdate,0)
 </insert>
 
 <select id="blist" resultType="boardvo" parameterType="map">
-SELECT num, title, writer,member_num,content,hit,elike,reip,bdate,imgn,row_num FROM (
-SELECT num, title, writer,member_num,content,hit,elike,reip,bdate,imgn, ROW_NUMBER() 
+SELECT num, title, writer,member_num,content,hit,elike,reip,bdate,imgn,row_num,comm_count FROM (
+SELECT num, title, writer,member_num,content,hit,elike,reip,bdate,imgn,comm_count, ROW_NUMBER() 
 OVER(ORDER BY num desc) AS row_num FROM BOARD 
 		<where>
             <if test="mypage == 'true'">

@@ -28,4 +28,6 @@ public interface DateDao {
 			@Param("date_location") String dateLocation);
 
 	int countDate(@Param("nickname") String nickname);
+	
+	int checkPending(@Param("nickname") String nickname);
 }

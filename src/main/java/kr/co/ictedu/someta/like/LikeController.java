@@ -112,4 +112,10 @@ public class LikeController {
 		System.out.println(likeService.detail(num));
 		return likeService.detail(num);
 	}
+	
+	@GetMapping("/checklike")
+	public int CheckLike(HttpSession session) {
+		MemberVO loginMember = (MemberVO) session.getAttribute("loginMember");
+		return likeService.checkPending(loginMember.getNickname());
+	}
 }

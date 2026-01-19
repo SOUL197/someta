@@ -20,6 +20,7 @@ public class BoardVO {
 	private int elike;
 	private String reip;
 	private String bdate;
+	private String comm_count;
 	private MultipartFile mfile;
 	
 	

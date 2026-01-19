@@ -30,4 +30,6 @@ public interface LikeRequestDao {
 	int totalCount(Map<String, Object> map);
 
 	List<Map<String, Object>> detail(int num);
+	
+	int checkPending(@Param("nickname") String nickname);
 }

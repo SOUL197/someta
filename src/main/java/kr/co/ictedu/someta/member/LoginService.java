@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import kr.co.ictedu.someta.date.DateService;
 import kr.co.ictedu.someta.vo.LoginLogVO;
 import kr.co.ictedu.someta.vo.MemberVO;
 
@@ -14,31 +14,35 @@ public class LoginService {
 
 	@Autowired
 	private LoginDao loginDao;
-	
+
 	@Autowired
 	private MyLogDao myLogDao;
-	
+
 	public Map<String, Object> loginCheck(MemberVO vo) {
 		return loginDao.loginCheck(vo);
 	}
-	
+
 	// -------------------------Passwordless-----------------------------
 	// Login Check
 	public MemberVO checkPassword(MemberVO vo) {
 		return loginDao.checkPassword(vo);
 	}
-    
-    // Search for User Information
+
+	// Search for User Information
 	public MemberVO getUserInfo(MemberVO vo) {
 		return loginDao.getUserInfo(vo);
 	}
 
-    // Password Change
+	// Password Change
 	public void changepw(MemberVO vo) {
 		loginDao.changepw(vo);
 	}
-	
-	public List<LoginLogVO> loginlog(int num) {
-		return myLogDao.getLoginLogging(num);
+
+	public List<Map<String, Object>> loginlog(Map<String, String> map) {
+		return myLogDao.getLoginLogging(map);
+	}
+
+	public int totalCount(int num) {
+		return myLogDao.totalCount(num);
 	}
 }

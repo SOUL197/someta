@@ -180,9 +180,9 @@ public class BoardController {
 		response.put("endPage", endPage);
 		return response;
 	}
-	@GetMapping("/delcomm")
-    public void delComm(@RequestParam("num") int num) {                                                      
-        boardCommService.del(num);       
+	@PostMapping("/delcomm")
+    public void delComm(@RequestBody Board_CommVO vo) {
+        boardCommService.del(vo);       
     }
 	@PostMapping("/elike")
 	public ResponseEntity<?> eLike(@RequestParam("num") int num) {

@@ -17,6 +17,10 @@
 		AND m.nickname = l.requester_id and l.RECEIVER_ID = #{nickname}
   	</select>
   
+  	<select id="checkPending">
+  		SELECT COUNT(*) FROM LIKE_REQUEST WHERE RECEIVER_ID = #{nickname} AND STATUS = 'pending'
+  	</select>
+  	
   	<update id="updateStatus">
 		UPDATE Like_REQUEST SET status = #{status} WHERE
 		(requester_id = #{nickName} AND receiver_id = #{likeNickName})
