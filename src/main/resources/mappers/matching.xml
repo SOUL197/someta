@@ -47,6 +47,9 @@
             		<if test="type == 9 and matchingValue.smoking != null">
 						and p.SMOKING like '%'|| #{matchingValue.smoking} ||'%'
             		</if>
+            		<if test="type == 10 and matchingValue.gender != null">
+						and p.GENDER like '%'|| #{matchingValue.gender} ||'%'
+            		</if>
 				</foreach>
 			</if>
 			<if test="searchType !=null">
@@ -114,6 +117,9 @@
             		</if>
             		<if test="type == 9 and matchingValue.smoking != null">
 						and p.SMOKING like '%'|| #{matchingValue.smoking} ||'%'
+            		</if>
+            		<if test="type == 10 and matchingValue.gender != null">
+						and p.GENDER like '%'|| #{matchingValue.gender} ||'%'
             		</if>
 				</foreach>
 			</if>
