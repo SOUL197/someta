@@ -31,7 +31,7 @@ public class ChartService {
 	public List<Map<String, Object>> adminFunnel() {return chartDao.adminFunnel();}
 	public List<Map<String, Object>> genderAge() {return chartDao.genderAge();}
 	public List<Map<String, Object>> weeklyVisitor() {return chartDao.weeklyVisitor();}
-	public int churnCount() {return chartDao.churnCount();}
+	public List<Map<String, Object>> churnCount(List<Integer> weeks) {return chartDao.churnCount(weeks);}
 	public int visitorCount() {return chartDao.visitorCount();}
 	public int newMemberCount() {return chartDao.newMemberCount();}
 }

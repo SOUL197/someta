@@ -27,7 +27,7 @@ public interface ChartDao {
 	List<Map<String, Object>> adminFunnel();
 	List<Map<String, Object>> genderAge();
 	List<Map<String, Object>> weeklyVisitor();
-	int churnCount();
+	List<Map<String, Object>> churnCount(List<Integer> weeks);
 	int visitorCount();
 	int newMemberCount();
 }

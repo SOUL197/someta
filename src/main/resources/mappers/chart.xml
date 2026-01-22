@@ -72,11 +72,11 @@
 	
 	<!-- 주간 매칭 추이 -->
 	<select id="weeklyMatch" resultType="map" parameterType="string">
-	    SELECT TRUNC(REQUEST_DATE) AS day, COUNT(*) AS count
-	    FROM like_request
-	    WHERE RECEIVER_ID=#{nickname} AND status='accepted' AND REQUEST_DATE >= TRUNC(SYSDATE)-6
-	    GROUP BY TRUNC(REQUEST_DATE)
-	    ORDER BY TRUNC(REQUEST_DATE)
+	    SELECT TRUNC(action_time) AS day, COUNT(*) AS count
+	    FROM LIKE_REQUEST_LOG l, (SELECT id FROM LIKE_REQUEST WHERE RECEIVER_ID=#{nickname}) r
+	    WHERE status='accepted' AND action_time >= TRUNC(SYSDATE)-6 AND r.id = l.LIKE_REQUEST_ID
+	    GROUP BY TRUNC(action_time)
+	    ORDER BY TRUNC(action_time)
 	</select>
 	
 	<!-- 활동 시간대 (Heatmap) -->
@@ -97,12 +97,15 @@
 	
 	<!-- 전체 회원 평균 응답률 -->
 	<select id="avgResponseRate" resultType="double">
-	  SELECT NVL(AVG(resp_rate),0) AS avg_rate FROM (
-	    SELECT
-	      nvl(COUNT(CASE WHEN STATUS != 'pending' THEN 1 END)/NULLIF(COUNT(*),0), 0) AS resp_rate
-	    FROM like_request
-	    GROUP BY RECEIVER_ID
-	  )
+	  SELECT NVL(AVG(resp_rate), 0) AS avg_rate
+		FROM (
+		  SELECT
+		    COUNT(CASE WHEN STATUS != 'pending' THEN 1 END)
+		    / NULLIF(COUNT(*), 0) AS resp_rate
+		  FROM like_request
+		  GROUP BY RECEIVER_ID
+		  HAVING COUNT(*) >= 1
+		)
 	</select>
 	
 	<!-- ===========================
@@ -122,13 +125,13 @@
 	
 	<!-- 퍼널 -->
 	<select id="adminFunnel" resultType="map">
-	    SELECT '가입' AS stage, COUNT(*) AS count FROM MEMBER
+	    SELECT '가입자 수' AS stage, COUNT(*) AS count FROM MEMBER WHERE num != 0
 	    UNION ALL
-	    SELECT '좋아요', COUNT(*) FROM like_request
+	    SELECT '좋아요 받은 사용자 수', COUNT(UNIQUE receiver_id) FROM like_request
 	    UNION ALL
-	    SELECT '첫 매칭', COUNT(*) FROM like_request WHERE status='accepted'
+	    SELECT '매칭 경험 사용자 수', COUNT(UNIQUE receiver_id) FROM like_request WHERE status='accepted'
 	    UNION ALL
-	    SELECT '데이트', COUNT(*) FROM date_request WHERE status='accepted'
+	    SELECT '데이트 경험 사용자 수', COUNT(UNIQUE receiver_id) FROM date_request WHERE status='accepted'
 	</select>
 	
 	<!-- 성별/연령 분포 -->
@@ -161,15 +164,21 @@
 	</select>
 	
 	<!-- 이탈률 -->
-	<select id="churnCount" resultType="int">
-	  SELECT COUNT(DISTINCT idn) FROM (
-	    SELECT idn, sstime,
-	           ROW_NUMBER() OVER(PARTITION BY idn ORDER BY sstime DESC) AS rn,
-	           ADD_MONTHS(SYSDATE,-1) AS onemonth
-	    FROM loginlog WHERE STATUS='login'
-	  ) WHERE rn=1 AND onemonth > sstime
+	<select id="churnCount" resultType="map">
+	  <foreach collection="list" item="w" separator="UNION ALL">
+	    SELECT
+	      #{w} AS week,
+	      COUNT(*) AS churn_count
+	    FROM (
+	      SELECT idn, MAX(sstime) AS last_login
+	      FROM loginlog
+	      WHERE status = 'login'
+	      GROUP BY idn
+	    )
+	    WHERE SYSDATE - (#{w} * 7) > last_login
+	  </foreach>
 	</select>
-	
+
 	<!-- 최근 30일 방문자 수 -->
 	<select id="visitorCount" resultType="int">
 	  SELECT COUNT(DISTINCT reip) 
@@ -181,7 +190,7 @@
 	<select id="newMemberCount" resultType="int">
 	  SELECT COUNT(*) 
 	  FROM MEMBER
-	  WHERE reg_date > (SYSDATE-30)
+	  WHERE regdate > (SYSDATE-30)
 	</select>
 	
 </mapper>

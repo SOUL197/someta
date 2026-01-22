@@ -39,7 +39,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import kr.co.ictedu.someta.pwl.MessageUtils;
-import kr.co.ictedu.someta.vo.LoginLogVO;
 import kr.co.ictedu.someta.vo.MemberVO;
 import kr.co.ictedu.someta.vo.PageVO;
 import lombok.extern.slf4j.Slf4j;
