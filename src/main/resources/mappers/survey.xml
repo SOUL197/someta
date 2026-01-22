@@ -6,7 +6,7 @@
   <mapper namespace="kr.co.ictedu.someta.survey.SurveyDAO">
   
   <select id="maxSurveyNum" resultType="Long">
-  	select Max(num) from survey
+  	select NVL(Max(num),0) from survey
   </select>
   
   <select id="findBySNUM" parameterType="Long" resultType="surveyresultvo">

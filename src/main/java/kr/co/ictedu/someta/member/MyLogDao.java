@@ -17,7 +17,7 @@ public interface MyLogDao {
 	public void addLoginLogging(LoginLogVO vo);
 
 	@Select("SELECT * FROM(\r\n"
-			+ "SELECT idn,reip,uagent,status,sstime,ROW_NUMBER() OVER(ORDER BY lognum ASC) row_num\r\n"
+			+ "SELECT idn,reip,uagent,status,sstime,ROW_NUMBER() OVER(ORDER BY lognum desc) row_num\r\n"
 			+ "FROM LOGINLOG WHERE idn = #{num}) WHERE row_num BETWEEN #{begin} AND #{end}")
 	public List<Map<String, Object>> getLoginLogging(Map<String, String> map);
 
